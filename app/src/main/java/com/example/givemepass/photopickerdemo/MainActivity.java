@@ -1,10 +1,12 @@
 package com.example.givemepass.photopickerdemo;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -12,6 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -19,11 +22,49 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PICKER = 100;
+    private static final int REQUEST_EXTERNAL_STORAGE = 200;
     private Button picker;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        int permission = ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            //未取得權限，向使用者要求允許權限
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_EXTERNAL_STORAGE
+            );
+        } else{
+            getPermissionAccess();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    getPermissionAccess();
+                } else {
+                    finish();
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+    private void getPermissionAccess() {
         picker = (Button) findViewById(R.id.pick_photo);
         picker.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -35,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(destIntent, PICKER);
             }
         });
-
     }
 
     @Override
